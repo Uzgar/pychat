@@ -5,14 +5,19 @@ class Server:
     def __init__(self, host, port):
         self.host = host
         self.port = port
-        self.servers = {"Server 1": "192.168.137.145", "Server 2": "192.168.1.100", "Server 3": "192.168.0.1"}
+        self.servers = {socket.gethostbyname(socket.gethostname())}
         self.clients = {}
+
+        # Get the local IP address of the server
+        self.local_ip = socket.gethostbyname(socket.gethostname())
+        self.servers= self.local_ip
 
         self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.server_socket.bind((self.host, self.port))
         self.server_socket.listen(5)
 
         print(f"Server listening on {self.host}:{self.port}")
+        print(f"Local Server IP: {self.local_ip}")
 
         self.accept_connections()
 
@@ -26,11 +31,6 @@ class Server:
 
     def handle_client(self, client_socket):
         pseudonym = client_socket.recv(1024).decode('utf-8')
-
-        if pseudonym == "DISCOVER":
-            self.send_discovery_response(client_socket)
-            client_socket.close()
-            return
 
         server_choice = self.send_server_list(client_socket)
         if server_choice not in self.servers:
@@ -54,11 +54,6 @@ class Server:
             pass
         finally:
             self.remove_client(pseudonym, client_socket)
-
-    def send_discovery_response(self, client_socket):
-        server_list = list(self.servers.keys())
-        server_list_str = ", ".join(server_list)
-        client_socket.sendall(f"DISCOVERY_RESPONSE:{server_list_str}".encode('utf-8'))
 
     def send_server_list(self, client_socket):
         server_list = list(self.servers.keys())
@@ -90,7 +85,7 @@ class Server:
         self.broadcast_user_count()
 
 def main():
-    server = Server('0.0.0.0', 5566)
+    server = Server(socket.gethostbyname(socket.gethostname()), 5566)
 
 if __name__ == "__main__":
     main()
