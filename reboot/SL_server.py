@@ -63,4 +63,29 @@ class Server:
         choice = client_socket.recv(1024).decode('utf-8')
         return choice
 
-    def broadcast_message
+    def broadcast_message(self, message):
+        for client_socket in self.clients.values():
+            try:
+                client_socket.sendall(message.encode('utf-8'))
+            except ConnectionError:
+                pass
+
+    def broadcast_user_count(self):
+        count = len(self.clients)
+        for client_socket in self.clients.values():
+            try:
+                client_socket.sendall(f"USER_COUNT:{count}".encode('utf-8'))
+            except ConnectionError:
+                pass
+
+    def remove_client(self, pseudonym, client_socket):
+        print(f"{pseudonym} disconnected")
+        self.clients.pop(pseudonym, None)
+        client_socket.close()
+        self.broadcast_user_count()
+
+def main():
+    server = Server('0.0.0.0', 5566)
+
+if __name__ == "__main__":
+    main()
