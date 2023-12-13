@@ -4,7 +4,7 @@ from threading import Thread
 class Server:
     def __init__(self):
         self.sock = socket(AF_INET, SOCK_STREAM)
-        self.server_address = ('192.168.137.145', 5566)
+        self.server_address = ('192.168.144.111', 5566)
         self.sock.bind(self.server_address)
         self.sock.listen(5)
         print("Server listening on", self.server_address)

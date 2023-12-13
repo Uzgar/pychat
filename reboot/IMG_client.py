@@ -50,7 +50,7 @@ class ClientGUI:
 
         self.username = self.username_dialog.username
         self.sock = socket(AF_INET, SOCK_STREAM)
-        self.server_address = ('192.168.137.145', 5566)  # Replace SERVER_IP with the actual IP address of your server
+        self.server_address = ('192.168.144.111', 5566)  # Replace SERVER_IP with the actual IP address of your server
         self.sock.connect(self.server_address)
 
         # Send the chosen username to the server
@@ -70,7 +70,7 @@ class ClientGUI:
             self.send_image(message)
         else:
             self.sock.sendall(message.encode('utf-8'))
-            self.message_listbox.insert(tk.END, f"{self.username}: {message}")
+            self.display_message(f"{self.username}: {message}")
         self.entry_var.set("")
 
     def send_image(self, message):
@@ -82,34 +82,37 @@ class ClientGUI:
             filename = os.path.basename(path)
             self.sock.sendall(f"/send_image {filename}".encode('utf-8'))
             self.sock.sendall(image_data)
-            self.message_listbox.insert(tk.END, f"{self.username} sent an image: {filename}")
+            self.display_message(f"{self.username} sent an image: {filename}")
         except FileNotFoundError:
-            self.message_listbox.insert(tk.END, f"Image file not found: {path}")
+            self.display_message(f"Image file not found: {path}")
 
     def receive_messages(self):
-            while True:
-                try:
-                    data = self.sock.recv(1024)
-                    if not data:
-                        break
-                    message = data.decode('utf-8')
-                    if message.startswith("USER_COUNT:"):
-                        parts = message.split(":")
-                        if len(parts) == 2:
-                            try:
-                                count = int(parts[1])
-                                self.update_user_count(count)
-                                continue  # Skip the rest of the loop for user count messages
-                            except ValueError:
-                                print("Invalid USER_COUNT message format:", message)
-                                continue
-                    elif message.startswith("/send_image"):
-                        self.receive_image()
-                    else:
-                        self.message_listbox.insert(tk.END, message)
-                except ConnectionError:
+        while True:
+            try:
+                data = self.sock.recv(1024)
+                if not data:
                     break
+                message = data.decode('utf-8')
+                if message.startswith("USER_COUNT:"):
+                    parts = message.split(":")
+                    if len(parts) == 2:
+                        try:
+                            count = int(parts[1])
+                            self.update_user_count(count)
+                            continue  # Skip the rest of the loop for user count messages
+                        except ValueError:
+                            print("Invalid USER_COUNT message format:", message)
+                            continue
+                elif message.startswith("/send_image"):
+                    self.receive_image()
+                else:
+                    self.display_message(message)
+            except ConnectionError:
+                break
 
+    def display_message(self, message):
+        if not message.startswith("USER_COUNT:"):
+            self.message_listbox.insert(tk.END, message)
 
     def receive_image(self):
         try:
@@ -117,7 +120,7 @@ class ClientGUI:
             image_data = self.sock.recv(1024)
             with open(filename, 'wb') as file:
                 file.write(image_data)
-            self.message_listbox.insert(tk.END, f"{self.username} sent an image: {filename}")
+            self.display_message(f"{self.username} sent an image: {filename}")
         except Exception as e:
             print(f"Error receiving image: {e}")
 
