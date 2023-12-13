@@ -5,12 +5,12 @@ class Server:
     def __init__(self, host, port):
         self.host = host
         self.port = port
-        self.servers = {socket.gethostbyname(socket.gethostname())}
+        self.servers = {"Server 1": "192.168.137.145", "Server 2": "192.168.1.100", "Server 3": "192.168.0.1"}
         self.clients = {}
 
         # Get the local IP address of the server
         self.local_ip = socket.gethostbyname(socket.gethostname())
-        self.servers= self.local_ip
+        self.servers["Local Server"] = self.local_ip
 
         self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.server_socket.bind((self.host, self.port))
@@ -63,29 +63,4 @@ class Server:
         choice = client_socket.recv(1024).decode('utf-8')
         return choice
 
-    def broadcast_message(self, message):
-        for client_socket in self.clients.values():
-            try:
-                client_socket.sendall(message.encode('utf-8'))
-            except ConnectionError:
-                pass
-
-    def broadcast_user_count(self):
-        count = len(self.clients)
-        for client_socket in self.clients.values():
-            try:
-                client_socket.sendall(f"USER_COUNT:{count}".encode('utf-8'))
-            except ConnectionError:
-                pass
-
-    def remove_client(self, pseudonym, client_socket):
-        print(f"{pseudonym} disconnected")
-        self.clients.pop(pseudonym, None)
-        client_socket.close()
-        self.broadcast_user_count()
-
-def main():
-    server = Server(socket.gethostbyname(socket.gethostname()), 5566)
-
-if __name__ == "__main__":
-    main()
+    def broadcast_message
