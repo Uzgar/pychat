@@ -1,6 +1,10 @@
 import tkinter as tk
 from socket import socket, AF_INET, SOCK_STREAM
 from threading import Thread
+import re
+import requests
+from io import BytesIO
+from PIL import Image, ImageTk
 
 class UsernameDialog(tk.Toplevel):
     def __init__(self, parent):
@@ -72,9 +76,35 @@ class ClientGUI:
                     count = int(message.split(":")[1])
                     self.update_user_count(count)
                 else:
-                    self.message_listbox.insert(tk.END, message)
+                    self.process_message(message)
             except ConnectionError:
                 break
+
+    def process_message(self, message):
+        # Check if the message contains a URL
+        url_pattern = re.compile(r'https?://\S+')
+        urls = re.findall(url_pattern, message)
+
+        if urls:
+            # Display images if URLs are found
+            for url in urls:
+                self.display_image(url)
+        else:
+            # Display regular text messages
+            self.message_listbox.insert(tk.END, message)
+
+    def display_image(self, url):
+        # Download the image from the URL
+        response = requests.get(url)
+        img_data = BytesIO(response.content)
+        img = Image.open(img_data)
+        img.thumbnail((200, 200))  # Adjust the size as needed
+
+        # Display the image in the message_listbox
+        photo = ImageTk.PhotoImage(img)
+        self.message_listbox.image_create(tk.END, image=photo)
+        self.message_listbox.insert(tk.END, '\n')  # Add a newline to separate images
+        self.message_listbox.yview(tk.END)  # Scroll to the bottom
 
     def update_user_count(self, count):
         self.users_label.config(text=f"Connected Users: {count}")
