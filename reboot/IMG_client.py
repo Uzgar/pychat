@@ -106,13 +106,13 @@ class ClientGUI:
                 elif message.startswith("/send_image"):
                     self.receive_image()
                 else:
-                    self.display_message(message)
+                    if not message.startswith("USER_COUNT:"):  # Check if the message is not a USER_COUNT message
+                        self.display_message(message)
             except ConnectionError:
                 break
 
     def display_message(self, message):
-        if not message.startswith("USER_COUNT:"):
-            self.message_listbox.insert(tk.END, message)
+        self.message_listbox.insert(tk.END, message)
 
     def receive_image(self):
         try:
