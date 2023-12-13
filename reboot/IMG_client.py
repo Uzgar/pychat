@@ -1,4 +1,5 @@
 import tkinter as tk
+from tkinter import scrolledtext
 from socket import socket, AF_INET, SOCK_STREAM
 from threading import Thread
 import re
@@ -31,7 +32,7 @@ class ClientGUI:
         self.master = master
         self.master.title("Chat Client")
 
-        self.message_listbox = tk.Listbox(self.master, height=15, width=50)
+        self.message_listbox = scrolledtext.ScrolledText(self.master, height=15, width=50, wrap=tk.WORD)
         self.message_listbox.pack(padx=10, pady=10)
 
         self.entry_var = tk.StringVar()
@@ -62,7 +63,7 @@ class ClientGUI:
     def send_message(self):
         message = self.entry_var.get()
         self.sock.sendall(message.encode('utf-8'))
-        self.message_listbox.insert(tk.END, f"{self.username}: {message}")
+        self.message_listbox.insert(tk.END, f"{self.username}: {message}\n")
         self.entry_var.set("")
 
     def receive_messages(self):
@@ -91,20 +92,26 @@ class ClientGUI:
                 self.display_image(url)
         else:
             # Display regular text messages
-            self.message_listbox.insert(tk.END, message)
-
+            self.message_listbox.insert(tk.END, f"{message}\n")
+    
     def display_image(self, url):
         # Download the image from the URL
         response = requests.get(url)
         img_data = BytesIO(response.content)
         img = Image.open(img_data)
-        img.thumbnail((200, 200))  # Adjust the size as needed
+        img.thumbnail((50, 50))  # Adjust the size as needed
 
-        # Display the image in the message_listbox
-        photo = ImageTk.PhotoImage(img)
-        self.message_listbox.image_create(tk.END, image=photo)
-        self.message_listbox.insert(tk.END, '\n')  # Add a newline to separate images
+        # Convert the image to RGBA mode
+        img = img.convert("RGBA")
+
+        # Remove the alpha channel (transparency)
+        img = ImageTk.PhotoImage(img)
+
+    # Display the image in the message_listbox
+        self.message_listbox.image_create(tk.END, image=img)
+        self.message_listbox.insert(tk.END, '\n')  # Add another newline for better spacing
         self.message_listbox.yview(tk.END)  # Scroll to the bottom
+
 
     def update_user_count(self, count):
         self.users_label.config(text=f"Connected Users: {count}")
