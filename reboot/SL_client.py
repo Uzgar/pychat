@@ -52,9 +52,35 @@ class ClientGUI:
         self.server_list_page = ServerListPage(self.master)
         self.server_list_page.protocol("WM_DELETE_WINDOW", self.master.destroy)
 
+        # Uncomment the following line to use server discovery
+        # self.discover_servers()
+
         self.servers = ["192.168.137.145", "192.168.1.100", "192.168.0.1"]  # Replace with your server IPs
         for server in self.servers:
             self.server_list_page.server_listbox.insert(tk.END, server)
+
+    def discover_servers(self):
+        self.server_list_page.server_listbox.delete(0, tk.END)
+        self.server_list_page.server_listbox.insert(tk.END, "Discovering servers...")
+
+        # Create a socket for discovery
+        discovery_socket = socket(AF_INET, SOCK_STREAM)
+        discovery_socket.settimeout(2)  # Set a timeout for server discovery
+
+        try:
+            discovery_socket.connect(("localhost", 5566))  # Replace with your server's IP and port
+            discovery_socket.sendall("DISCOVER".encode('utf-8'))
+
+            data = discovery_socket.recv(1024).decode('utf-8')
+            if data.startswith("DISCOVERY_RESPONSE:"):
+                server_list = data.split(":")[1].split(", ")
+                self.server_list_page.server_listbox.delete(0, tk.END)
+                for server in server_list:
+                    self.server_list_page.server_listbox.insert(tk.END, server)
+        except Exception as e:
+            print(f"Error during server discovery: {e}")
+        finally:
+            discovery_socket.close()
 
     def connect_to_server(self, selected_server):
         self.server_list_page.destroy()

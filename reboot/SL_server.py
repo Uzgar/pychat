@@ -20,12 +20,17 @@ class Server:
         while True:
             client_socket, client_address = self.server_socket.accept()
             print(f"Accepted connection from {client_address}")
-            
+
             client_thread = threading.Thread(target=self.handle_client, args=(client_socket,))
             client_thread.start()
 
     def handle_client(self, client_socket):
         pseudonym = client_socket.recv(1024).decode('utf-8')
+
+        if pseudonym == "DISCOVER":
+            self.send_discovery_response(client_socket)
+            client_socket.close()
+            return
 
         server_choice = self.send_server_list(client_socket)
         if server_choice not in self.servers:
@@ -49,6 +54,11 @@ class Server:
             pass
         finally:
             self.remove_client(pseudonym, client_socket)
+
+    def send_discovery_response(self, client_socket):
+        server_list = list(self.servers.keys())
+        server_list_str = ", ".join(server_list)
+        client_socket.sendall(f"DISCOVERY_RESPONSE:{server_list_str}".encode('utf-8'))
 
     def send_server_list(self, client_socket):
         server_list = list(self.servers.keys())
