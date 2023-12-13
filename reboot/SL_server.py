@@ -5,7 +5,7 @@ class Server:
     def __init__(self, host, port):
         self.host = host
         self.port = port
-        self.servers = {"Server 1": "192.168.137.145", "Server 2": "192.168.1.100", "Server 3": "192.168.0.1"}
+        self.servers = {}
         self.clients = {}
 
         # Get the local IP address of the server
@@ -85,7 +85,7 @@ class Server:
         self.broadcast_user_count()
 
 def main():
-    server = Server('0.0.0.0', 5566)
+    server = Server(socket.gethostbyname(socket.gethostname()), 5566)
 
 if __name__ == "__main__":
     main()
