@@ -1,5 +1,6 @@
 from socket import socket, AF_INET, SOCK_STREAM
 from threading import Thread
+import time
 
 class Server:
     def __init__(self):
@@ -40,13 +41,10 @@ class Server:
                 message = data.decode('utf-8')
                 sender_username = self.clients[client_sock]
 
-                if message.startswith("/send_image"):
-                    self.handle_image_message(client_sock)
-                else:
-                    # Broadcast the message to all clients with sender's username
-                    for client, username in list(self.clients.items()):
-                        if client != client_sock:
-                            client.sendall(f"{sender_username}: {message}".encode('utf-8'))
+                # Broadcast the message to all clients with sender's username
+                for client, username in self.clients.items():
+                    if client != client_sock:
+                        client.sendall(f"{sender_username}: {message}".encode('utf-8'))
             except ConnectionError:
                 break
 
@@ -54,36 +52,18 @@ class Server:
         del self.clients[client_sock]
         self.broadcast_user_count()
 
-    def handle_image_message(self, client_sock):
-        try:
-            filename = client_sock.recv(1024).decode('utf-8')
-            image_data = client_sock.recv(1024)
-            with open(filename, 'wb') as file:
-                file.write(image_data)
-
-            # Broadcast the image message to all clients
-            for client in list(self.clients):
-                try:
-                    client.sendall(f"{self.clients[client_sock]} sent an image: {filename}".encode('utf-8'))
-                except ConnectionError:
-                    continue
-        except Exception as e:
-            print(f"Error handling image message: {e}")
-
     def send_user_count(self):
         while True:
             user_count = len(self.clients)
             # Broadcast the user count to all clients
             self.broadcast_user_count(user_count)
+            time.sleep(5)  # Update user count every 5 seconds
 
     def broadcast_user_count(self, count=None):
         if count is None:
             count = len(self.clients)
 
-        # Créez une copie du dictionnaire avant l'itération
-        clients_copy = dict(self.clients)
-
-        for client, _ in clients_copy.items():
+        for client in self.clients:
             try:
                 client.sendall(f"USER_COUNT:{count}".encode('utf-8'))
             except ConnectionError:
