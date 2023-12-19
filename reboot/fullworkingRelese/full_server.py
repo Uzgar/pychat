@@ -1,9 +1,8 @@
 import socket
 from threading import Thread
 import time
-import re
 
-admin_username = 'kik'
+admin_username = ['kik',]
 class Server:
     def __init__(self):
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -51,8 +50,12 @@ class Server:
 
             # Replace 'admin' with '[Admin]' for new users
             new_username = username
-            if new_username.lower() == admin_username:
-                new_username = '[Admin]'
+            for i in range(len(admin_username)):
+                adminscan = 1
+                if adminscan == len(admin_username):
+                    continue
+                elif new_username.lower() == admin_username[adminscan]:
+                    new_username = '[Admin]'
 
             print(f"{client_address} chose the username: {new_username}")
 
@@ -190,7 +193,7 @@ class Server:
 def main():
     server = Server()
     # Add IPs to the blocked list as needed
-    server.blocked_ips = {'admin_ip'}  # Add the actual IP of the admin machine
+    server.blocked_ips = {'ip.example.tkt'}  # Add the actual IP of the admin machine
     server.start()
 
 if __name__ == "__main__":
