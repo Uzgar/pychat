@@ -13,18 +13,25 @@ class IPDialog(tk.simpledialog.Dialog):
     def apply(self):
         self.result = self.ip_entry.get()
 
-class UsernameDialog(tk.Toplevel):
+class UsernamePasswordDialog(tk.Toplevel):
     def __init__(self, parent):
         super().__init__(parent)
-        self.title("Enter Username")
-        self.geometry("300x100")
+        self.title("Enter Username and Password")
+        self.geometry("300x150")
 
-        self.label = tk.Label(self, text="Choose a username:")
-        self.label.pack(pady=10)
+        self.username_label = tk.Label(self, text="Choose a username:")
+        self.username_label.pack(pady=5)
 
-        self.entry_var = tk.StringVar()
-        self.entry = tk.Entry(self, textvariable=self.entry_var, width=20)
-        self.entry.pack(pady=10)
+        self.username_var = tk.StringVar()
+        self.username_entry = tk.Entry(self, textvariable=self.username_var, width=20)
+        self.username_entry.pack(pady=5)
+
+        self.password_label = tk.Label(self, text="Enter Password:")
+        self.password_label.pack(pady=5)
+
+        self.password_var = tk.StringVar()
+        self.password_entry = tk.Entry(self, textvariable=self.password_var, show="*", width=20)
+        self.password_entry.pack(pady=5)
 
         self.ok_button = tk.Button(self, text="OK", command=self.ok_button_click)
         self.ok_button.pack()
@@ -33,7 +40,8 @@ class UsernameDialog(tk.Toplevel):
         self.lift()
 
     def ok_button_click(self):
-        self.username = self.entry_var.get()
+        self.username = self.username_var.get()
+        self.password = self.password_var.get()
         self.destroy()
 
 class ClientGUI:
@@ -66,16 +74,18 @@ class ClientGUI:
         self.users_label = tk.Label(self.master, text="Connected Users: 0")
         self.users_label.pack(side=tk.BOTTOM, padx=10, pady=10)
 
-        self.username_dialog = UsernameDialog(self.master)
-        self.master.wait_window(self.username_dialog)
+        self.username_password_dialog = UsernamePasswordDialog(self.master)
+        self.master.wait_window(self.username_password_dialog)
 
-        self.username = self.username_dialog.username
+        self.username = self.username_password_dialog.username
+        self.password = self.username_password_dialog.password
+
         self.sock = socket(AF_INET, SOCK_STREAM)
         self.server_address = (self.server_ip, 5566)  # Use the provided server IP
         self.sock.connect(self.server_address)
 
-        # Send the chosen username to the server
-        self.sock.sendall(self.username.encode('utf-8'))
+        # Send the chosen username and password to the server
+        self.sock.sendall(f"{self.username},{self.password}".encode('utf-8'))
 
         # Start the thread for receiving messages and user count
         receive_thread = Thread(target=self.receive_messages)
@@ -100,6 +110,10 @@ class ClientGUI:
                 if message.startswith("USER_COUNT:"):
                     count = int(message.split(":")[1])
                     self.update_user_count(count)
+                elif message == "INVALID_LOGIN":
+                    print("Invalid login credentials. Exiting...")
+                    self.sock.close()
+                    self.master.quit()
                 else:
                     self.message_listbox.insert(tk.END, message)
                     # Autoscroll to the bottom of the listbox
