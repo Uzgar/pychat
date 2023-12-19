@@ -4,6 +4,8 @@ import time
 import re
 
 admin_username = 'kik'
+
+
 class Server:
     def __init__(self):
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -42,6 +44,9 @@ class Server:
             # Receive the username from the client
             username = client_sock.recv(1024).decode('utf-8')
 
+            # Receive the password from the client
+            password = client_sock.recv(1024).decode('utf-8')
+
             # Check if the username contains variations of 'admin'
             if self.contains_admin_variant(username):
                 print(f"Blocked connection attempt with admin-like username: {username}")
@@ -66,6 +71,11 @@ class Server:
                         continue
 
             # Implement authentication logic here
+            if not self.verify_login(username, password):
+                print(f"Invalid login attempt for {username}")
+                client_sock.sendall("INVALID_LOGIN".encode('utf-8'))
+                client_sock.close()
+                continue
 
             self.clients[client_sock] = new_username
 
@@ -170,6 +180,15 @@ class Server:
         else:
             print("Unknown admin command")
 
+    def verify_login(self, username, password):
+        # Read login credentials from the file
+        with open('login.txt', 'r') as file:
+            for line in file:
+                stored_username, stored_password = line.strip().split(', ')
+                if username == stored_username and password == stored_password:
+                    return True
+        return False
+
     def send_user_count(self):
         while True:
             user_count = len(self.clients)
@@ -187,11 +206,13 @@ class Server:
             except ConnectionError:
                 continue
 
+
 def main():
     server = Server()
     # Add IPs to the blocked list as needed
     server.blocked_ips = {'admin_ip'}  # Add the actual IP of the admin machine
     server.start()
+
 
 if __name__ == "__main__":
     main()
