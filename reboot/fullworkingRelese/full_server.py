@@ -50,12 +50,8 @@ class Server:
 
             # Replace 'admin' with '[Admin]' for new users
             new_username = username
-            for i in range(len(admin_username)):
-                adminscan = 1
-                if adminscan == len(admin_username):
-                    continue
-                elif new_username.lower() == admin_username[adminscan]:
-                    new_username = '[Admin]'
+            if new_username.lower() == admin_username:
+                new_username = '[Admin]'
 
             print(f"{client_address} chose the username: {new_username}")
 
@@ -97,8 +93,13 @@ class Server:
                 message = data.decode('utf-8')
                 sender_username = self.clients[client_sock]
 
-                if sender_username.lower() == admin_username:
-                    sender_username = '[Admin]'
+
+                for i in range(len(admin_username)):
+                    adminscan = 1
+                    if adminscan == len(admin_username[i]):
+                        continue
+                    elif sender_username.lower() == admin_username[adminscan]:
+                        sender_username = '[Admin]'
 
                 if sender_username == '[Admin]' and message.startswith("/"):
                     command_parts = message[1:].split(" ", 1)
