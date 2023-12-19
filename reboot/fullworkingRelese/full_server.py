@@ -94,8 +94,8 @@ class Server:
                 sender_username = self.clients[client_sock]
 
 
-                for i in range(len(admin_username)):
-                    adminscan = 1
+                for i in range(len(admin_username[i])):
+                    adminscan = 0
                     if adminscan == len(admin_username[i]):
                         continue
                     elif sender_username.lower() == admin_username[adminscan]:
