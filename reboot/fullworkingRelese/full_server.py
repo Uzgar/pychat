@@ -92,7 +92,7 @@ class Server:
 
                 message = data.decode('utf-8')
                 sender_username = self.clients[client_sock]
-
+ 
 
                 for i in range(len(admin_username[i])):
                     adminscan = 0
